@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
-var moviesModel = require('../schemas/movies')
+var billModel = require('../schemas/bill')
+var xuatChieuModel = require('../schemas/xuatChieu')
+var movieModel = require('../schemas/movies')
 var ResHelper = require('../helper/ResponseHelper');
 const { query } = require('express');
 
@@ -42,50 +44,60 @@ router.get('/', async function (req, res, next) {
   //     sortQuery[req.query.sort] = 1;
   //   }
   // }
-  let moviesArray = await moviesModel.find();
-  let movies = moviesArray.filter((e) => !e.isDeleted);
+  let array = await billModel.find().populate('userId').populate({
+    path: 'xuatChieuId',
+    populate: {
+      path: 'movieID',
+    }
+  });
+  let bills = array.filter((e) => !e.isDeleted);
   // .lean()
   // .limit(limit)
   // .skip((page - 1) * limit)
   // .sort(sortQuery)
   // .exec();
-  ResHelper.RenderRes(res, true, movies)
+  ResHelper.RenderRes(res, true, bills)
 });
 
+//Get bills of a user
 router.get('/:id', async function (req, res, next) {
   try {
-    let movie = await moviesModel.findById(req.params.id).exec();
-    ResHelper.RenderRes(res, true, movie)
+    let bills = await billModel.find({userId: req.params.id}).populate({
+      path: 'xuatChieuId',
+      populate: {
+        path: 'movieID',
+      }
+    }).exec();
+    ResHelper.RenderRes(res, true, bills)
   } catch (error) {
     ResHelper.RenderRes(res, false, error)
   }
 });
-//Thêm nhiều phim
-router.post('/adds', async function (req, res, next) {
-  try {
-    // console.log(req.body.length);
-    for (let index = 0; index < req.body.length; index++) {
-      let movie = new moviesModel(req.body[index]);
-      await movie.save();
-      // console.log(req.body[index]);
-    }
-    ResHelper.RenderRes(res, true, req.body)
-  } catch (error) {
-    ResHelper.RenderRes(res, false, error)
-    // console.log(error)
-  }
-});
-//Thêm 1 phim
+
+//Thêm 1 vé
 router.post('/', async function (req, res, next) {
   try {
     // console.log(req.body.length);
-    const newMovie = new moviesModel(req.body);
-    await newMovie.save();
+    const xuatChieu = await xuatChieuModel.findById(req.body.xuatChieuId).exec();
+    // let xuatChieu = await xuatChieuModel.findByIdAndUpdate
+    //   (req.params.xuatChieuId, { $set: { seat: req.params.seat } }, {
+    //     new: true
+    //   }).exec()
 
-    ResHelper.RenderRes(res, true, newMovie)
+    if (xuatChieu) {
+      xuatChieu.seat -= req.body.seat;
+      await xuatChieu.save();
+      // console.log(xuatChieu)
+      const bill = new billModel(req.body);
+      await bill.save();
+
+      ResHelper.RenderRes(res, true, bill)
+    } else {
+      ResHelper.RenderRes(res, false, "khong co xuat chieu");
+    }
   } catch (error) {
     ResHelper.RenderRes(res, false, error)
-    // console.log(error)
+    console.log(error)
   }
 });
 

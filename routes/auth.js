@@ -134,17 +134,50 @@ router.post("/ResetPassword/:token", userValidator.checkStrongPassChain(), async
 })
 
 //Change password
-router.post('/changePassword', checkLogin, userValidator.checkStrongPassChain(), async function (req, res, next) {
-  var result = validationResult(req);
-  if (result.errors.length > 0) {
-    ResHelper.RenderRes(res, false, result.errors);
-    return;
-  }
-  var user = req.user;
-  user.password = req.body.password;
-  await user.save();
-  ResHelper.RenderRes(res, true, "Doi mat khau thanh cong");
-});
+// router.post('/changePassword', checkLogin, userValidator.checkStrongPassChain(), async function (req, res, next) {
+//   try {
+//     var result = validationResult(req);
+//     if (result.errors.length > 0) {
+//       console.log(result.errors)
+//       ResHelper.RenderRes(res, false, result.errors);
+//       return;
+//     }
+//     var user = await userModel.findById(req.body.user);
+//     if (user) {
+//       user.password = req.body.password;
+//       await user.save();
+//       ResHelper.RenderRes(res, true, "Doi mat khau thanh cong");
+//     } else {
+//       console.log("first")
+//       ResHelper.RenderRes(res, false, "Doi mat khau khong thanh cong");
+//     }
+//   } catch (error) {
+//     console.log("error")
+//     ResHelper.RenderRes(res, false, error);
+//   }
+// });
 
+router.post('/changePassword', checkLogin, async function (req, res, next) {
+  try {
+    var result = validationResult(req);
+    if (result.errors.length > 0) {
+      console.log(result.errors)
+      ResHelper.RenderRes(res, false, result.errors);
+      return;
+    }
+    var user = await userModel.findById(req.body.user);
+    if (user) {
+      user.password = req.body.password;
+      await user.save();
+      ResHelper.RenderRes(res, true, "Doi mat khau thanh cong");
+    } else {
+      console.log("first")
+      ResHelper.RenderRes(res, false, "Doi mat khau khong thanh cong");
+    }
+  } catch (error) {
+    console.log("error")
+    ResHelper.RenderRes(res, false, error);
+  }
+});
 
 module.exports = router;

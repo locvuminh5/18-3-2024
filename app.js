@@ -11,8 +11,12 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-app.use(cors());
-
+// app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
+// app.options('http://localhost:3030/api/v1/auth/changePassword', cors());
 // const allowedOrigins = ['http://localhost:3000', 'https://example.com'];
 
 // // Enable CORS with specific options
